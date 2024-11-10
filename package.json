@@ -1,0 +1,11 @@
+{
+  "name": "o107_finalproject",
+  "version": "1.0.0",
+  "description": "shopping website for o107",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
