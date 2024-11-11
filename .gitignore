@@ -1,0 +1,15 @@
+#ignore node_modules
+node_modules/
+
+#logs
+npm-debug.log
+
+
+
+#os-specific files
+.DS_Store
+Thumbs.db
+
+#ide-specific files
+.idea/
+.vscode/
