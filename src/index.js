@@ -1,6 +1,5 @@
 // index.js
-// application main entry point
-// initializes server
+// application main entry point. initializes server
 
 // import 'app' module
 const app = require('./app');

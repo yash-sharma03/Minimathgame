@@ -1,5 +1,5 @@
 // app.js
-// configures application
+// handle Express application (routes, middleware)
 
 // import express modules
 const express = require('express');
@@ -10,6 +10,9 @@ const productRoutes = require('./routes/productRoutes');
 // create express application
 const app = express();
 
+// import database setup (db.js)
+const db = require('./db')
+
 // use routes (src/routes)
 app.use('/user', userRoutes);
 app.use('/product', productRoutes);
@@ -19,7 +22,7 @@ app.get('/', (req,res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-// expose `public` folder (css, media)
+// express uses `public` directory as ROOT for static files (css, media)
 app.use(express.static(path.join(__dirname, '../public')));
 
 // export 'app'
