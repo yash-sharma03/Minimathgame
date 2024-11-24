@@ -29,6 +29,8 @@ Then in browser you can visit http://localhost:3000
 - `git commit -m "<message>"`
 - `git push origin main`
 
+# pulling changes from main branch
+- `git pull origin main`
 
 ## what are the project files?
 - package.json - project information and list of dependencies
