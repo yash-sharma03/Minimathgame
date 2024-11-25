@@ -1,7 +1,7 @@
 /**
- * route handling for product pages
- * 1: show all products
- * 2: individual products
+ * route handling for items/individual pages
+ * 1: show all items
+ * 2: individual item
  */
 
 // import express module and route handler
@@ -10,7 +10,7 @@ const router = express.Router();
 
 // TODO change to links to html
 router.get('/', (req, res) => {
-    res.send('list of products');
+    res.send('list of items');
 });
 
 // export the router

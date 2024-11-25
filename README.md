@@ -22,14 +22,16 @@ Make sure command line is in the project directory i.e. `xxxx\o107_finalproject\
 
 `node src/index.js` OR `npm start`
 
-Then in browser you can visit http://localhost:3000
+Then, visit in browser: http://localhost:3000
 
 ## pushing changes to main branch
+Make sure to be in project directory
 - `git add .`
 - `git commit -m "<message>"`
 - `git push origin main`
 
 # pulling changes from main branch
+Make sure to be in project directory
 - `git pull origin main`
 
 ## what are the project files?
@@ -39,5 +41,5 @@ Then in browser you can visit http://localhost:3000
     - src/index.js - application entry point
 
 ## list of technologies used
-- Node.js, Express
+- Node.js, Express, Sqlite3
 - HTML, CSS, JavaScript

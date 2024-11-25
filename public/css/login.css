@@ -1,0 +1,30 @@
+form
+{
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+form *
+{
+    /* background: red; */
+    margin: auto;
+    width: 50%;
+}
+
+figure
+{
+    display: flex;
+    flex-direction: column;
+}
+
+button
+{
+    background: #54af54;
+    color: #eee;
+    border: 0;
+    padding: 1rem;
+    width: 25%;
+}
