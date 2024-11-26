@@ -1,3 +1,13 @@
+/*
+ * login.css
+ * used in: login.html, signup.html
+ */
+
+#errorP
+{
+    color: red;
+}
+
 form
 {
     align-items: center;
@@ -22,9 +32,17 @@ figure
 
 button
 {
-    background: #54af54;
     color: #eee;
     border: 0;
     padding: 1rem;
     width: 25%;
+}
+
+#loginBtn
+{
+    background: #54af54;
+}
+#signupBtn
+{
+    background: #5454af;
 }

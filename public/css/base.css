@@ -27,3 +27,27 @@ body
 {
     text-align: center;
 }
+
+#userFigure
+{
+    /* background: red; */
+    justify-content: end;
+    align-items: end;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    font-size: 1.5rem;
+}
+
+mark
+{
+    background: none;
+    font-weight: bold;
+}
+
+body > p
+{
+    margin: auto;
+    padding: 1rem 0;
+    width: 50%;
+}

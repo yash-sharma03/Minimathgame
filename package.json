@@ -14,7 +14,9 @@
     "url": "https://github.com/yelir4/o107_finalproject.git"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "express": "^4.21.1",
+    "express-session": "^1.18.1",
     "sqlite3": "^5.1.7"
   }
 }

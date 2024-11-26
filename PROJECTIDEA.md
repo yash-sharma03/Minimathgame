@@ -1,15 +1,24 @@
+TODO:
+    webpages
+
+
+
+
 # module: express
 
+Express provides the basic functionality of the web server for us to branch off from.
 
 # module: sqlite3
 
-We decided to use SQLite for our database management system. This is to increase portability, and allow people to download the project, and run a local server regardless of their environment. By using SQLite instead of something like MySQL, it simplifies this process as there is no installation or configuration process for new users.
-
+We decided to use SQLite for our database management system. Using SQLite increases our project's portability, and allows people to download the project and run a local server regardless of their environment. By using SQLite instead of another database management system like MySQL, it simplifies the demonstration process as there is no installation or configuration for new users.
 
 # module: bcrypt
 
-hash passwords for user authentication
+We added the bcrypt module to help us hash passwords, increasing user and system security. We use 10 salt rounds, and check passwords against the database when logging in to make sure that user information is secure, and that malicious actors cannot easily log into other people's accounts
 
+# module: express-session
+
+We installed the express-session module as an extension of express. This module allows the web server to remember the users interacting with the website. Thus users will stay logged in and can perform their actions (earning gold, buying items in shop, customizing avatar).
 
 project tables:
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Gold Mine</title>
+    <meta charset="utf-8">
+
+    <!-- link to css -->
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+
+<body>
+    <header>
+        <h1>Gold Mine</h1>
+    </header>
+    
+    <figure id="userFigure">
+        <p id="userP">User: <mark id="userMark"></mark></p>
+        <p id="goldP">Gold: <mark id="goldMark"></mark></p>
+    </figure>
+
+    <!-- hat carousel -->
+    <figure>
+        <article>red hat</article>
+    </figure>
+
+    <!-- shirt carousel -->
+    <figure>
+        <article>red shirt</article>
+    </figure>
+
+    <!-- shoe carousel -->
+    <figure>
+        <article>red shoes</article>
+    </figure>
+</body>
+<script>
+    // fetch session data (user)
+    fetch('/api/session')
+        .then(response => response.json())
+        .then(data => {
+            if (data.user)
+            {
+                document.getElementById('userMark').textContent = data.user.UserName;
+                document.getElementById('goldMark').textContent = data.user.UserGold;
+            }
+            else
+                window.location.href = '/login'; // shouldn't happen but just in case, redirect to /login
+        })
+        .catch(error => console.error('Error: ', error));
+</script>
+</html>
