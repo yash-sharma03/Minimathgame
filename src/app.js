@@ -20,9 +20,10 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 // express: pass session data as JSON to webpages
 app.use(express.json());
-// express: app serves static assets (css/media) from /public
+// express: app serves static assets (css/js/media) from /public
 app.use('/css', express.static(path.join(__dirname, '../public/css')));
 app.use('/js', express.static(path.join(__dirname, '../public/js')));
+app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 // express-sessions: allow sessions to be created
 /** @NOTE if deploying for production, replace the secret key */
@@ -42,12 +43,6 @@ function authenticate(req, res, next)
 
     res.redirect('/login'); // redirect to login page
 }
-
-// route: index.html (home page)
-// TODO redirect to home page if user already logged in
-app.get('/', (req,res) => {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
 
 // route: signup.html
 app.get('/signup', (req,res) => {
@@ -183,6 +178,13 @@ app.get('/shop', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'shop.html'));
 });
 
+
+// route: avatar.html
+// authenticate => user must be logged in
+app.get('/avatar', authenticate, (req,res) => {
+    res.sendFile(path.join(__dirname, '../public/', 'avatar.html'));
+});
+
 // use routes (src/routes)
 app.use('/user', userRoutes);
 app.use('/item', itemRoutes);
@@ -208,18 +210,16 @@ app.get('/api/session', authenticate, (req,res) => {
     res.json({ user: req.session.user });
 });
 
-
-
-// TODO consider
 // handle all other requests
 // not authenticated -> redirect to login
+// authenticated -> redirect to avatar
 app.use((req,res) => {
-    // return res.status(404).send('Invalid request');
     if (!req.session.user)
-        res.redirect('/login');
-    else
-        res.redirect('/profile');
+        return res.redirect('/login');
+    
+    return res.redirect('/avatar');
 })
+
 
 // export 'app'
 module.exports = app;

@@ -36,6 +36,7 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS Item (
             ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
             ItemName TEXT NOT NULL,
+            ItemType TEXT NOT NULL,
             ItemPrice INTEGER NOT NULL
         )
     `, (err) => {

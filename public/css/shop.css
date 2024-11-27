@@ -1,0 +1,54 @@
+/** everything under the header */
+main
+{
+    display: flex;
+    height: 100%;
+}
+
+/* left side: image */
+section
+{
+    background: #555;
+    /* center vertically */
+    align-items: center;
+    display: flex;
+    float: left;
+    height: 100%;
+    /* center horizontally */
+    justify-content: center;
+    overflow: hidden;
+    width: 50%;
+}
+
+img
+{
+    /* background: lightcoral; */
+    /** maintain aspect ratio */
+    aspect-ratio: 1 / 1;
+    /** shrink to fit any box */
+    object-fit: contain;
+    max-width: 80%;
+    max-height: 80%;
+    /** explicitly tell image to take all available width */
+    width: 100%;
+}
+
+/* right side */
+aside
+{
+    background: pink;
+    display: flex;
+    flex-direction: column;
+    float: right;
+    gap: 1rem;
+    height: 100%;
+    width: 50%;
+    justify-content: center;
+}
+
+/* carousels */
+aside > figure
+{
+    background:lightblue;
+    height: 25%;
+}

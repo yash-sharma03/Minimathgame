@@ -1,42 +1,65 @@
-/** document properties */
-html
+/** universal box-sizing */
+*, *::before, *::after
 {
-    background: #eee;
-    font-family: system-ui;
-    font-size: 1rem;
-    line-height: 1;
-}
-
-/** remove default element padding, margin */
-html *
-{
-    /* border: 0; */
+    /* include padding & borders in element width/height */
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-header
+/** html: no scrollbars */
+html
 {
-    background: #121212;
-    color: #eee;
-    padding: 0.5rem 0;
-    width: 100%;
+    overflow: hidden;
 }
 
 body
 {
+    background: #eee;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
+    font-size: 1rem;
+    /** full viewport */
+    height: 100vh;
+    line-height: 1;
     text-align: center;
 }
+
+header
+{
+    /* display: none; */
+    background: #121212;
+    color: #eee;
+    padding: 0.5rem 0;
+    width: 100%;
+    /* prevent users from selecting text */
+    user-select: none;
+}
+
 
 #userFigure
 {
     /* background: red; */
-    justify-content: end;
     align-items: end;
     display: flex;
     flex-direction: column;
-    padding: 0.5rem;
     font-size: 1.5rem;
+    gap: 0.2rem;
+    padding: 0.5rem;
+    position: absolute;
+    right: 0;
+    /* prevent users from selecting text */
+    user-select: none;
+}
+
+#userFigure > a
+{
+    background: #54af54;
+    color: #eee;
+    font-size: 1rem;
+    padding: 0.5rem;
+    text-decoration: none;
 }
 
 mark

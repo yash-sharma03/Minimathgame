@@ -7,7 +7,7 @@
 
     <!-- link to css -->
     <link rel="stylesheet" href="/css/base.css">
-    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/shop.css">
 </head>
 
 <body>
@@ -15,26 +15,37 @@
         <h1>Gold Mine</h1>
     </header>
     
-    <figure id="userFigure">
-        <p id="userP">User: <mark id="userMark"></mark></p>
-        <p id="goldP">Gold: <mark id="goldMark"></mark></p>
-    </figure>
+    <!-- left side: image view -->
+    <main>
+        <figure id="userFigure">
+            <p id="userP">User: <mark id="userMark"></mark></p>
+            <p id="goldP">Gold: <mark id="goldMark"></mark></p>
+            <a href="/logout">Log out</a>
+        </figure>
+ 
+        <section>
+            <img src="/images/sprite.png">
+        </section>
 
-    <!-- hat carousel -->
-    <figure>
-        <article>red hat</article>
-    </figure>
+        <!-- hat carousel -->
+        <aside>
+            <figure>
+                <article>red hat</article>
+            </figure>
 
-    <!-- shirt carousel -->
-    <figure>
-        <article>red shirt</article>
-    </figure>
+            <!-- shirt carousel -->
+            <figure>
+                <article>red shirt</article>
+            </figure>
 
-    <!-- shoe carousel -->
-    <figure>
-        <article>red shoes</article>
-    </figure>
+            <!-- shoe carousel -->
+            <figure>
+                <article>red shoes</article>
+            </figure>
+        </aside>
+    </main>
 </body>
+
 <script>
     // fetch session data (user)
     fetch('/api/session')
