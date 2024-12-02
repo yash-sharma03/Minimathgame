@@ -17,6 +17,7 @@ section
     /* center horizontally */
     justify-content: center;
     overflow: hidden;
+    /* user-select: none; */
     width: 50%;
 }
 
@@ -38,36 +39,40 @@ img
     z-index: 1;
 }
 
-/** display item information */
-#itemFigure
+/** display item information for buy/equipping */
+#buyFigure
 {
     position: absolute;
     bottom: 5%;
 
-    background: orange;
+    /* background: orange; */
     display: flex;
     flex-direction: column;
-    padding: 0.5rem 1rem;
+    visibility: hidden;
     z-index: 2;
+}
+
+#buyP
+{
+    font-size: 1.2rem;
 }
 
 /** buy/equip button */
 #buyButton
 {
-
-    background: var(--theme-red);
+    background: var(--theme-green);
     border: 0;
     color: var(--theme-white);
-    cursor: not-allowed;
-    /* display: none; */
+    cursor: pointer;
     padding: 0.5rem 1rem;
     z-index: 2;
 }
 
-.enabled
+/** when button is disabled */
+#buyButton:disabled
 {
-    background: var(--theme-green);
-    cursor: pointer;
+    background: var(--theme-red);
+    cursor: not-allowed;
 }
 
 /* right side */
@@ -112,6 +117,11 @@ aside > figure > article > h2
     font-weight: bold;
 }
 
+.owned
+{
+    background: var(--theme-red);
+}
+
 .selected
 {
     background: var(--theme-blue);
@@ -119,5 +129,5 @@ aside > figure > article > h2
 
 .equipped
 {
-    background: var(--theme-green);
+    background: var(--theme-yellow);
 }

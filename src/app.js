@@ -77,12 +77,12 @@ app.post('/signup', (req,res) => {
         db.prepare('INSERT INTO User (UserName, UserPassword) VALUES (?,?)').run(username, hashedPassword);
 
         // query the user we just inserted
-        const newUser = db.prepare('SELECT UserName FROM User WHERE UserName == ?').get(username);
+        const newUser = db.prepare('SELECT UserID FROM User WHERE UserName == ?').get(username);
 
         if (!newUser)
             return res.status(401).send('Failed to query new user');
 
-        req.session.user = newUser.UserName;
+        req.session.user = newUser.UserID;
         return res.status(201).send('User created');
     }
     catch (err)
@@ -112,7 +112,7 @@ app.post('/login', async (req,res) => {
     try
     {
         // try to find user
-        const user = db.prepare('SELECT UserName, UserPassword FROM User WHERE UserName == ?').get(username);
+        const user = db.prepare('SELECT UserID, UserName, UserPassword FROM User WHERE UserName == ?').get(username);
 
         // user not found => error
         if (!user)
@@ -124,7 +124,7 @@ app.post('/login', async (req,res) => {
         // SUCCESS: set session user (login)
         if (match)
         {
-            req.session.user = user.UserName;
+            req.session.user = user.UserID;
             return res.send('Login successful');
         }
         else
@@ -176,21 +176,26 @@ app.get('/logout', (req,res) => {
 app.get('/api/getUser', authenticate, (req,res) => {
     try
     {
+        // fetch data from User
         const result = db.prepare(`
             SELECT UserName, UserGold, UserHat, UserShirt, UserPants
             FROM User
-            WHERE UserName = ?
+            WHERE UserID = ?
         `).get(req.session.user); 
 
         if (!result)
             return res.status(404).send('User not found');
+
+        // fetch all owned items from UserItem (NOTE: its ok if no items owned yet)
+        const items = db.prepare('SELECT ItemID FROM UserItem WHERE UserID = ?').all(req.session.user);
 
         res.json({
             UserName: result.UserName,
             UserGold: result.UserGold,
             UserHat: result.UserHat,
             UserShirt: result.UserShirt,
-            UserPants: result.UserPants
+            UserPants: result.UserPants,
+            UserItems: items
         });
     }
     catch (err)
@@ -215,14 +220,82 @@ app.get('/api/getItems', authenticate, (req,res) => {
     }
 });
 
-app.get('/api/winGold', authenticate, (req,res) => {
+app.post('/api/buyItem', authenticate, (req,res) => {
+    // extract item id from query parameter
+    const ItemID = parseInt(req.query.id);
+
+    // protect against invalid input
+    if (isNaN(ItemID))
+        return res.status(400).json({ error: 'Invalid Item ID'});
 
     try
     {
-        const user = db.prepare('SELECT UserGold FROM User WHERE UserName = ?').get(req.session.user);
-        db.prepare('UPDATE TABLE User')
+        // 1. query Item: how much gold does item cost
+        // 2. query User: do you have enough gold
+        // 3. query User: subtract UserGold
+        // 4. query UserItem: insert new row with UserID and ItemID
+        // 5. return something? user will have to /api/getUser again
+        // transaction for atomicity
+        const transaction = db.transaction(() => {
+            const item = db.prepare('SELECT ItemPrice FROM Item WHERE ItemID = ?').get(ItemID);
+            if (!item) return res.status(401).json({ error: 'Could not find item'});
+
+            const user = db.prepare('SELECT UserGold FROM User WHERE UserID = ?').get(req.session.user);
+            if (!user) return res.status(401).json({ error: 'Could not find user'});
+
+            if (user.UserGold < item.ItemPrice)
+                return res.status(400).json({ error: 'Insufficient gold'});
+
+            db.prepare('UPDATE User SET UserGold = UserGold - ? WHERE UserID = ?').run(item.ItemPrice, req.session.user);
+            db.prepare('INSERT INTO UserItem (UserID, ItemID) VALUES (?,?)').run(req.session.user, ItemID);
+        });
+
+        // run transaction
+        transaction();
+
+        return res.status(200).json({ message: 'Item purchased' });
     }
-    catch (error)
+    catch (err)
+    {
+        console.error('Error /api/buyItem: ', err);
+        return res.status(500).json({ error: 'Error buying item' });
+    }
+});
+
+app.post('/api/equipItem', authenticate, (req,res) => {
+    try
+    {
+        // extract item id from request body
+        const { ItemID } = req.body;
+
+        if (isNaN(ItemID)) return res.status(400).json({ error: 'Missing item ID' });
+
+        // hat
+        if (ItemID == 0 || (ItemID > 0 && ItemID < 9))
+            db.prepare('UPDATE User SET UserHat = ? WHERE UserID = ?').run(ItemID, req.session.user);
+        // shirt
+        else if (ItemID == -1 || (ItemID > 8 && ItemID < 16))
+            db.prepare('UPDATE User SET UserShirt = ? WHERE UserID = ?').run(ItemID, req.session.user);
+        // pants
+        else
+            db.prepare('UPDATE User SET UserPants = ? WHERE UserID = ?').run(ItemID, req.session.user);
+
+        return res.status(200).json({ message: 'Item equipped' });
+    }
+    catch (err)
+    {
+        console.error('Error /api/equipItem: ', err);
+        return res.status(500).json({ error: 'Error equipping item' });
+    }
+});
+
+app.post('/api/winGold', authenticate, (req,res) => {
+    try
+    {
+        db.prepare('UPDATE User SET UserGold = UserGold+10 WHERE UserID = ?').run(req.session.user);
+        return res.status(200).json({ message: 'Gold added' });
+    }
+    catch (err)
     {
         console.error('Error /api/winGold: ', err);
         return res.status(500).send('Error winning gold');
