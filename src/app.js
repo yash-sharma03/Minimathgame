@@ -53,7 +53,7 @@ app.get('/signup', (req,res) => {
 });
 
 // route: signup.html AFTER FORM SUBMIT
-app.post('/signup', async (req,res) => {
+app.post('/signup', (req,res) => {
     // retrieve form data
     const { username, password } = req.body;
 
@@ -61,59 +61,35 @@ app.post('/signup', async (req,res) => {
     if (!username || !password)
         return res.status(400).send('Missing username or password');
 
-    // check if user already exists in database (User)
-    const sql = 'SELECT * FROM User WHERE UserName == ?';
-    db.get(sql, [username], async (err, user) => {
-        // query error
-        if (err)
-        {
-            console.error('Error querying User table: ', err);
-            return res.status(500).send('Internal server error');
-        }
+    try
+    {
+        // new user cannot have same username as existing user
+        const existingUser = db.prepare('SELECT UserName FROM User WHERE UserName == ?').get(username);
 
-        // USER FOUND! error
-        if (user)
+        if (existingUser)
             return res.status(401).send('User already exists');
 
-        // hash password
-        try
-        {
-            const saltRounds = 10; // bcrypt: hashing rounds
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // hash provided password
+        const saltRounds = 10; // bcrypt: hashing rounds
+        const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
-            // insert User into database
-            const sql = 'INSERT INTO User (UserName, UserPassword) VALUES (?,?)';
-            db.run(sql, [username, hashedPassword], (err) => {
-                if (err)
-                {
-                    console.error('Error inserting user into User table: ', err);
-                    return res.status(500).send('Internal server error');
-                }
+        // insert user into database
+        db.prepare('INSERT INTO User (UserName, UserPassword) VALUES (?,?)').run(username, hashedPassword);
 
-                // INSERTED! query the row again
-                const sql = 'SELECT UserName, UserGold FROM User Where UserName == ?';
-                db.run(sql, [username], (err, user) => {
-                    if (err)
-                    {
-                        console.error('Error inserting user into User table: ', err);
-                        return res.status(500).send('Internal server error');
-                    }
+        // query the user we just inserted
+        const newUser = db.prepare('SELECT UserName FROM User WHERE UserName == ?').get(username);
 
-                    // SUCCESS! set session user, TODO redirect
-                    req.session.user = { 
-                        UserName: user.UserName,
-                        UserGold: user.UserGold
-                    };
-                    return res.status(201).send('User created');
-                });
-            });
-        }
-        catch (err)
-        {
-            console.error('Error hashing password: ', err);
-            return res.status(500).send('Internal server error');
-        }
-    });
+        if (!newUser)
+            return res.status(401).send('Failed to query new user');
+
+        req.session.user = newUser.UserName;
+        return res.status(201).send('User created');
+    }
+    catch (err)
+    {
+        console.error('Error /signup: ', err);
+        return res.status(500).send('Internal server error');
+    }
 });
 
 // route: login.html
@@ -133,43 +109,32 @@ app.post('/login', async (req,res) => {
     if (!username || !password)
         return res.status(400).send('Missing username or password');
 
-    // check if user exists in database (User)
-    const sql = 'SELECT * FROM User WHERE UserName == ?';
-    db.get(sql, [username], async (err, user) => {
-        // query error
-        if (err)
-        {
-            console.error('Error querying User table: ', err);
-            return res.status(500).send('Internal server error');
-        }
+    try
+    {
+        // try to find user
+        const user = db.prepare('SELECT UserName, UserPassword FROM User WHERE UserName == ?').get(username);
 
         // user not found => error
         if (!user)
             return res.status(401).send('User does not exist');
 
         // try to match password
-        try
-        {
-            const match = await bcrypt.compare(password, user.UserPassword);
+        const match = await bcrypt.compare(password, user.UserPassword);
 
-            // SUCCESS? set session user
-            if (match)
-            {
-                req.session.user = {
-                    UserName: user.UserName,
-                    UserGold: user.UserGold
-                }
-                return res.send('Login successful');
-            }
-            else
-                return res.status(401).send('Incorrect password');
-        }
-        catch (error)
+        // SUCCESS: set session user (login)
+        if (match)
         {
-            console.error('Error comparing passwords: ', error);
-            return res.status(500).send('Internal server error');
+            req.session.user = user.UserName;
+            return res.send('Login successful');
         }
-    });
+        else
+            return res.status(401).send('Incorrect password');
+    }
+    catch (err)
+    {
+        console.error('Error /login: ', err);
+        return res.status(500).send('Internal server error');
+    }
 });
 
 // route: shop.html
@@ -204,10 +169,64 @@ app.get('/logout', (req,res) => {
     });
 });
 
-// API endpoint: fetching user session data
+// API endpoint: fetch user session data
 // webpages (/shop) call this function on page load
-app.get('/api/session', authenticate, (req,res) => {
-    res.json({ user: req.session.user });
+// user must be logged in (obviously)
+// ASYNC/AWAIT FORMAT
+app.get('/api/getUser', authenticate, (req,res) => {
+    try
+    {
+        const result = db.prepare(`
+            SELECT UserName, UserGold, UserHat, UserShirt, UserPants
+            FROM User
+            WHERE UserName = ?
+        `).get(req.session.user); 
+
+        if (!result)
+            return res.status(404).send('User not found');
+
+        res.json({
+            UserName: result.UserName,
+            UserGold: result.UserGold,
+            UserHat: result.UserHat,
+            UserShirt: result.UserShirt,
+            UserPants: result.UserPants
+        });
+    }
+    catch (err)
+    {
+        console.error('Error /api/getUser: ', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// fetch all shop items
+// called by /shop on page load
+app.get('/api/getItems', authenticate, (req,res) => {
+    try
+    {
+        const items = db.prepare('SELECT * FROM Item').all();
+        res.json({ items: items });
+    }
+    catch (err)
+    {
+        console.error("Error /api/getItems: ", err);
+        return res.status(500).send('Error retrieving items');
+    }
+});
+
+app.get('/api/winGold', authenticate, (req,res) => {
+
+    try
+    {
+        const user = db.prepare('SELECT UserGold FROM User WHERE UserName = ?').get(req.session.user);
+        db.prepare('UPDATE TABLE User')
+    }
+    catch (error)
+    {
+        console.error('Error /api/winGold: ', err);
+        return res.status(500).send('Error winning gold');
+    }
 });
 
 // handle all other requests

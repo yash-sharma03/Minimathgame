@@ -8,6 +8,8 @@
     <!-- link to css -->
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/shop.css">
+    <!-- js: execute after parsing HTML document -->
+    <script defer src="/js/shop.js"></script>
 </head>
 
 <body>
@@ -15,50 +17,56 @@
         <h1>Gold Mine</h1>
     </header>
     
-    <!-- left side: image view -->
     <main>
+        <!-- display user information -->
         <figure id="userFigure">
             <p id="userP">User: <mark id="userMark"></mark></p>
             <p id="goldP">Gold: <mark id="goldMark"></mark></p>
             <a href="/logout">Log out</a>
         </figure>
  
+        <!-- left side: image view -->
         <section>
-            <img src="/images/sprite.png">
+            <img id="avatarImg" src="/images/avatar.png">
+            <img id="hatsImg" src="/images/blank.png">
+            <img id="shirtsImg" src="/images/blank.png">
+            <img id="pantsImg" src="/images/blank.png">
+            <!-- information for buying items -->
+            <figure id="itemFigure">
+                <p>hi freinds</p>
+                <button id="buyButton" class="disabled"></button>
+            </figure>
         </section>
 
-        <!-- hat carousel -->
+        <!-- right side: carousels -->
         <aside>
-            <figure>
-                <article>red hat</article>
+            <!-- hats carousel -->
+            <figure id="hatsFigure">
+                <article id="item0">
+                    <h2>Bald</h2>
+                    <p>0</p>
+                </article>
             </figure>
 
-            <!-- shirt carousel -->
-            <figure>
-                <article>red shirt</article>
+            <!-- shirts carousel -->
+            <figure id="shirtsFigure">
+                <article id="item-1">
+                    <h2>White Shirt</h2>
+                    <p>0</p>
+                </article>
             </figure>
 
-            <!-- shoe carousel -->
-            <figure>
-                <article>red shoes</article>
+            <!-- pants carousel -->
+            <figure id="pantsFigure">
+                <article id="item-2">
+                    <h2>Blue Shorts</h2>
+                    <p>0</p>
+                </article>
             </figure>
         </aside>
     </main>
 </body>
 
 <script>
-    // fetch session data (user)
-    fetch('/api/session')
-        .then(response => response.json())
-        .then(data => {
-            if (data.user)
-            {
-                document.getElementById('userMark').textContent = data.user.UserName;
-                document.getElementById('goldMark').textContent = data.user.UserGold;
-            }
-            else
-                window.location.href = '/login'; // shouldn't happen but just in case, redirect to /login
-        })
-        .catch(error => console.error('Error: ', error));
 </script>
 </html>

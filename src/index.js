@@ -4,7 +4,6 @@
 // import 'app' module
 const app = require('./app');
 
-// TODO CONFIGURE MIDDLEWARE, CONNECT TO DATABASE
 
 // application listens on port 3000
 app.listen(3000, () => {

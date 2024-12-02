@@ -3,6 +3,12 @@
  * used in: login.html, signup.html
  */
 
+/** prevent from spanning whole viewport (?) */
+body
+{
+height: 100%;
+}
+
 #errorP
 {
     color: red;

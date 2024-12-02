@@ -6,6 +6,12 @@ TODO:
     shop page
 
 
+SELECT *
+FROM Item AS I INNER JOIN UserItem AS UI
+ON I.ItemID = UI.ItemID
+
+
+
 INSERT INTO Item (ItemName, ItemType, ItemPrice) VALUES ('Black Hair', 'Hat', 20);
 INSERT INTO Item (ItemName, ItemType, ItemPrice) VALUES ('Brown Hair', 'Hat', 20); 
 INSERT INTO Item (ItemName, ItemType, ItemPrice) VALUES ('Blond Hair', 'Hat', 20); 

@@ -1,50 +1,42 @@
 // db.js
 // handle database connections, queries
 
-// verbose provides better logging/debug messages
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const path = require('path');
 
 // path to SQLite database
 const dbPath = path.join(__dirname, '../database/app.db');
 
-
 // create/connect to database
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err)
-        console.error('Error connecting to SQLite: ', err);
-    else
-        console.log('Connected to SQLite at: ', dbPath);
-});
-
+const db = new Database(dbPath, { verbose: console.log });
 
 // create tables if they don't exist
-db.serialize(() => {
-    db.run(`
+try
+{
+    db.prepare(`
         CREATE TABLE IF NOT EXISTS User (
             UserID INTEGER PRIMARY KEY AUTOINCREMENT,
             UserName TEXT NOT NULL,
             UserPassword TEXT NOT NULL,
-            UserGold INTEGER NOT NULL DEFAULT 0
+            UserGold INTEGER NOT NULL DEFAULT 0,
+            UserHat INTEGER NOT NULL DEFAULT 0,
+            UserShirt INTEGER NOT NULL DEFAULT -1,
+            UserPants INTEGER NOT NULL DEFAULT -2 
         )
-    `, (err) => {
-        if (err) console.error('Error creating User table: ', err);
-        else console.log('User table exists.');
-    });
+    `).run();
+    console.log('User table exists/created');
 
-    db.run(`
+    db.prepare(`
         CREATE TABLE IF NOT EXISTS Item (
             ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
             ItemName TEXT NOT NULL,
             ItemType TEXT NOT NULL,
             ItemPrice INTEGER NOT NULL
         )
-    `, (err) => {
-        if (err) console.error('Error creating Item table: ', err);
-        else console.log('Item table exists.');
-    });
+    `).run();
+    console.log('Item table exists/created');
 
-    db.run(`
+    db.prepare(`
         CREATE TABLE IF NOT EXISTS UserItem (
             UserItemID INTEGER PRIMARY KEY AUTOINCREMENT,
             UserID INTEGER NOT NULL,
@@ -52,10 +44,12 @@ db.serialize(() => {
             FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
             FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
         )
-    `, (err) => {
-        if (err) console.error('Error creating UserItem table: ', err);
-        else console.log('UserItem table exists.');
-    });
-});
+    `).run();
+    console.log('UserItem table exists/created');
+}
+catch (err)
+{
+    console.error('Error setting up tables: ', err);
+}
 
 module.exports = db;

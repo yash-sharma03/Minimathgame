@@ -1,3 +1,15 @@
+/** custom colors */
+:root
+{
+    --theme-black: #121212;
+    --theme-blue: #5454af;
+    --theme-darkgray: #555;
+    --theme-gray: #999;
+    --theme-green: #54af54;
+    --theme-red: #af5454;
+    --theme-white: #eee;
+}
+
 /** universal box-sizing */
 *, *::before, *::after
 {
@@ -5,6 +17,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    user-select: none;
 }
 
 /** html: no scrollbars */
@@ -15,7 +28,8 @@ html
 
 body
 {
-    background: #eee;
+    background: var(--theme-white);
+    color: var(--theme-black);
     display: flex;
     flex-direction: column;
     font-family: system-ui, sans-serif;
@@ -29,8 +43,8 @@ body
 header
 {
     /* display: none; */
-    background: #121212;
-    color: #eee;
+    background: var(--theme-black);
+    color: var(--theme-white);
     padding: 0.5rem 0;
     width: 100%;
     /* prevent users from selecting text */
@@ -55,8 +69,8 @@ header
 
 #userFigure > a
 {
-    background: #54af54;
-    color: #eee;
+    background: var(--theme-green);
+    color: var(--theme-white);
     font-size: 1rem;
     padding: 0.5rem;
     text-decoration: none;
@@ -73,4 +87,11 @@ body > p
     margin: auto;
     padding: 1rem 0;
     width: 50%;
+}
+
+/** image rendering: don't want browser to interpolate the image (64x64) */
+img
+{
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }
