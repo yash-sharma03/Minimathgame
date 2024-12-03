@@ -137,19 +137,95 @@ async function fetchUser ()
 }
 
 // highlight items
+// account for whether there is selected item
 function highlightItems ()
 {
-    if (itemSelected != null)
-    {
-        itemSelected.classList.add('selected');
-    }
-
     // highlight equipped items
     hatEquipped.classList.add('equipped');
     shirtEquipped.classList.add('equipped');
     pantsEquipped.classList.add('equipped');
+
+    // only update if there is selected item
+    if (itemSelected != null)
+    {
+        itemSelected.classList.add('selected');
+        // LEFT SIDE: load images of equipped items, then selected item
+        switch (itemSelected.metadata.type)
+        {
+            case 'Hat':
+                shirtsImg.setAttribute("src", shirtEquipped.metadata.file);
+                pantsImg.setAttribute("src", pantsEquipped.metadata.file);
+                hatsImg.setAttribute("src", itemSelected.metadata.file);
+                break;
+            case 'Shirt':
+                hatsImg.setAttribute("src", hatEquipped.metadata.file);
+                pantsImg.setAttribute("src", pantsEquipped.metadata.file);
+                shirtsImg.setAttribute("src", itemSelected.metadata.file);
+                break;
+            case 'Pants':
+                hatsImg.setAttribute("src", hatEquipped.metadata.file);
+                shirtsImg.setAttribute("src", shirtEquipped.metadata.file);
+                pantsImg.setAttribute("src", itemSelected.metadata.file);
+                break;
+        }
+
+        // update buyFigure
+        buyFigure.style.visibility = 'visible';
+        buyP.textContent = itemSelected.querySelector('h2').textContent;
+        /**
+         * buyButton behavior logic:
+         * 
+         * if user owns item (OR DEFAULT ITEM):
+         *      if equipped: disabled
+         *      else: "equip", enabled
+         * else
+         *      if enough gold: buy, enabled
+         *      else: broke, disabled
+         */
+        if (itemsOwned.includes(itemSelected) || itemSelected.metadata.id < 1)
+        {
+            if (itemSelected == hatEquipped || itemSelected == shirtEquipped || itemSelected == pantsEquipped)
+            {
+                buyButton.textContent = 'Already equipped';
+                buyButton.disabled = true;
+            }
+            else
+            {
+                buyButton.textContent = 'Equip';
+                buyButton.disabled = false;
+            }
+        }
+        else
+        {
+            if (userdata.UserGold >= itemSelected.metadata.price)
+            {
+                buyButton.textContent = 'Buy';
+                buyButton.disabled = false;
+            }
+            else
+            {
+                buyButton.textContent = 'Too Broke To Buy';
+                buyButton.disabled = true;
+            }
+        }
+    }
 }
 
+// called when item ARTICLE clicked
+// change itemSelected
+// article accessible by: event.currentTarget
+function handleItemClick (event)
+{
+    // de-select any currently selected element
+    if (itemSelected != null)
+        itemSelected.classList.remove("selected");
+
+    // update selected item, highlight
+    itemSelected = event.currentTarget;
+
+    // highlight items accordingly
+    highlightItems();
+}
 
 // asynchronous fetch on page load
 // user info first, then items
@@ -161,107 +237,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     buyButton.addEventListener('click', handleBuy);
 });
 
-// called when item ARTICLE clicked
-// article accessible by: event.currentTarget
-function handleItemClick (event)
-{
-    // de-select any currently selected element
-    if (itemSelected != null)
-    {
-        console.log(itemSelected);
-        itemSelected.classList.remove("selected");
-    }
-
-    // update selected item, highlight
-    itemSelected = event.currentTarget;
-    itemSelected.classList.add("selected");
-
-    // LEFT SIDE: load images of equipped items, then selected item
-    switch (event.currentTarget.metadata.type)
-    {
-        case 'Hat':
-            shirtsImg.setAttribute("src", shirtEquipped.metadata.file);
-            pantsImg.setAttribute("src", pantsEquipped.metadata.file);
-            hatsImg.setAttribute("src", event.currentTarget.metadata.file);
-            break;
-        case 'Shirt':
-            hatsImg.setAttribute("src", hatEquipped.metadata.file);
-            pantsImg.setAttribute("src", pantsEquipped.metadata.file);
-            shirtsImg.setAttribute("src", event.currentTarget.metadata.file);
-            break;
-        case 'Pants':
-            hatsImg.setAttribute("src", hatEquipped.metadata.file);
-            shirtsImg.setAttribute("src", shirtEquipped.metadata.file);
-            pantsImg.setAttribute("src", event.currentTarget.metadata.file);
-            break;
-    }
-
-    // update buyFigure
-    buyFigure.style.visibility = 'visible';
-    buyP.textContent = itemSelected.querySelector('h2').textContent;
-    /**
-     * buyButton behavior logic:
-     * 
-     * if user owns item (OR DEFAULT ITEM):
-     *      if equipped: disabled
-     *      else: "equip", enabled
-     * else
-     *      if enough gold: buy, enabled
-     *      else: broke, disabled
-     */
-    if (itemsOwned.includes(itemSelected) || itemSelected.metadata.id < 1)
-    {
-        if (itemSelected == hatEquipped || itemSelected == shirtEquipped || itemSelected == pantsEquipped)
-        {
-            buyButton.textContent = 'Already equipped';
-            buyButton.disabled = true;
-        }
-        else
-        {
-            buyButton.textContent = 'Equip';
-            buyButton.disabled = false;
-        }
-    }
-    else
-    {
-        if (userdata.UserGold >= itemSelected.metadata.price)
-        {
-            buyButton.textContent = 'Buy';
-            buyButton.disabled = false;
-        }
-        else
-        {
-            buyButton.textContent = 'Too Broke To Buy';
-            buyButton.disabled = true;
-        }
-    }
-}
-
 /** on buy button mouse click */
 async function handleBuy ()
 {
-    if (itemsOwned.includes(itemSelected))
-    {
-        // POST request to api to equip selected item
-        const response = await fetch('/api/equipItem', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ ItemID: itemSelected.metadata.id })
-        });
+    /** which api */
+    const apiToCall = (itemsOwned.includes(itemSelected) ? '/api/equipItem' : '/api/buyItem');
 
-        if (!response.ok) console.log(response);
+    // POST request to api to buy/equip selected item
+    const response = await fetch(apiToCall, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ItemID: itemSelected.metadata.id })
+    });
 
-        const data = await response.json();
-        console.log(data);
-    }
-    else
-    {
-        // buy selected item
-        const response = await fetch('/api/buyItem' + itemSelected.metadata.id);
-        const data = await response.json();
-    }
+    if (!response.ok) console.log(response);
+
+    const data = await response.json();
+    console.log(data);
 
     // remove old equipped classes
     hatEquipped.classList.remove('equipped');

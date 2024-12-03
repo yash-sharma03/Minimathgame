@@ -28,6 +28,8 @@ img
     aspect-ratio: 1 / 1;
     /** shrink to fit any box */
     object-fit: contain;
+    /** clicks pass through images */
+    pointer-events: none;
     /** allow image stacking */
     position: fixed;
     max-width: 80%;

@@ -52,6 +52,34 @@ header
     user-select: none;
 }
 
+nav
+{
+    /* background: blue; */
+    display: flex;
+    gap: 0.5rem;
+    position: absolute;
+    /* top: 1rem; */
+    right: 0;
+    margin: 0;
+    /* padding: 1rem; */
+    z-index: 2;
+}
+
+nav > a
+{
+    /* background: var(--theme-darkgray); */
+    color: var(--theme-white);
+    cursor: pointer;
+    padding: 1rem;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+nav > a:hover
+{
+    background: var(--theme-darkgray);
+}
+
 
 #userFigure
 {

@@ -5,9 +5,6 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-// url routes
-const userRoutes = require('./routes/userRoutes');
-const itemRoutes = require('./routes/itemRoutes');
 // import sqlite3: database setup (db.js)
 const db = require('./db')
 // import bcrypt: hashing password, user authentication
@@ -45,6 +42,7 @@ function authenticate(req, res, next)
 }
 
 // route: signup.html
+// if already logged in, redirect
 app.get('/signup', (req,res) => {
     if (req.session.user)
         res.redirect('/');
@@ -65,9 +63,7 @@ app.post('/signup', (req,res) => {
     {
         // new user cannot have same username as existing user
         const existingUser = db.prepare('SELECT UserName FROM User WHERE UserName == ?').get(username);
-
-        if (existingUser)
-            return res.status(401).send('User already exists');
+        if (existingUser) return res.status(401).send('User already exists');
 
         // hash provided password
         const saltRounds = 10; // bcrypt: hashing rounds
@@ -78,9 +74,7 @@ app.post('/signup', (req,res) => {
 
         // query the user we just inserted
         const newUser = db.prepare('SELECT UserID FROM User WHERE UserName == ?').get(username);
-
-        if (!newUser)
-            return res.status(401).send('Failed to query new user');
+        if (!newUser) return res.status(401).send('Failed to query new user');
 
         req.session.user = newUser.UserID;
         return res.status(201).send('User created');
@@ -113,10 +107,7 @@ app.post('/login', async (req,res) => {
     {
         // try to find user
         const user = db.prepare('SELECT UserID, UserName, UserPassword FROM User WHERE UserName == ?').get(username);
-
-        // user not found => error
-        if (!user)
-            return res.status(401).send('User does not exist');
+        if (!user) return res.status(401).send('User does not exist');
 
         // try to match password
         const match = await bcrypt.compare(password, user.UserPassword);
@@ -143,6 +134,11 @@ app.get('/shop', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'shop.html'));
 });
 
+// route: avatar.html
+// authenticate => user must be logged in
+app.get('/minigame', authenticate, (req,res) => {
+    res.sendFile(path.join(__dirname, '../public/', 'minigame.html'));
+});
 
 // route: avatar.html
 // authenticate => user must be logged in
@@ -150,12 +146,8 @@ app.get('/avatar', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'avatar.html'));
 });
 
-// use routes (src/routes)
-app.use('/user', userRoutes);
-app.use('/item', itemRoutes);
-
 // route: logout
-// destroys session, redirect to login page
+// destroy session, redirect to login page
 app.get('/logout', (req,res) => {
     req.session.destroy((err) => {
         if (err)
@@ -183,8 +175,7 @@ app.get('/api/getUser', authenticate, (req,res) => {
             WHERE UserID = ?
         `).get(req.session.user); 
 
-        if (!result)
-            return res.status(404).send('User not found');
+        if (!result) return res.status(404).send('User not found');
 
         // fetch all owned items from UserItem (NOTE: its ok if no items owned yet)
         const items = db.prepare('SELECT ItemID FROM UserItem WHERE UserID = ?').all(req.session.user);
@@ -221,20 +212,17 @@ app.get('/api/getItems', authenticate, (req,res) => {
 });
 
 app.post('/api/buyItem', authenticate, (req,res) => {
-    // extract item id from query parameter
-    const ItemID = parseInt(req.query.id);
-
-    // protect against invalid input
-    if (isNaN(ItemID))
-        return res.status(400).json({ error: 'Invalid Item ID'});
-
     try
     {
+        // extract item id from request body
+        const { ItemID } = req.body;
+        if (isNaN(ItemID)) return res.status(400).json({ error: 'Missing item ID' });
+
         // 1. query Item: how much gold does item cost
         // 2. query User: do you have enough gold
         // 3. query User: subtract UserGold
         // 4. query UserItem: insert new row with UserID and ItemID
-        // 5. return something? user will have to /api/getUser again
+        // 5. return; user will call /api/getUser again
         // transaction for atomicity
         const transaction = db.transaction(() => {
             const item = db.prepare('SELECT ItemPrice FROM Item WHERE ItemID = ?').get(ItemID);
@@ -267,8 +255,9 @@ app.post('/api/equipItem', authenticate, (req,res) => {
     {
         // extract item id from request body
         const { ItemID } = req.body;
-
         if (isNaN(ItemID)) return res.status(400).json({ error: 'Missing item ID' });
+
+        let ItemType;
 
         // hat
         if (ItemID == 0 || (ItemID > 0 && ItemID < 9))
@@ -279,6 +268,8 @@ app.post('/api/equipItem', authenticate, (req,res) => {
         // pants
         else
             db.prepare('UPDATE User SET UserPants = ? WHERE UserID = ?').run(ItemID, req.session.user);
+
+        db.prepare('UPDATE User SET UserHat = ? WHERE UserID = ?').run(ItemID, req.session.user);
 
         return res.status(200).json({ message: 'Item equipped' });
     }

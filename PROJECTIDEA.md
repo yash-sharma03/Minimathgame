@@ -5,6 +5,8 @@ TODO:
     profile pages
     shop page
 
+    signup/login routing
+
 
 SELECT *
 FROM Item AS I INNER JOIN UserItem AS UI
