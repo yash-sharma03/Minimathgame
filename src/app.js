@@ -57,13 +57,13 @@ app.post('/signup', (req,res) => {
 
     // ensure both username and password are included
     if (!username || !password)
-        return res.status(400).send('Missing username or password');
+        return res.status(400).json({ error: 'Missing username or password' });
 
     try
     {
         // new user cannot have same username as existing user
         const existingUser = db.prepare('SELECT UserName FROM User WHERE UserName == ?').get(username);
-        if (existingUser) return res.status(401).send('User already exists');
+        if (existingUser) return res.status(401).json({ error: 'User already exists' });
 
         // hash provided password
         const saltRounds = 10; // bcrypt: hashing rounds
@@ -74,15 +74,15 @@ app.post('/signup', (req,res) => {
 
         // query the user we just inserted
         const newUser = db.prepare('SELECT UserID FROM User WHERE UserName == ?').get(username);
-        if (!newUser) return res.status(401).send('Failed to query new user');
+        if (!newUser) return res.status(401).json({ error: 'Failed to query new user' });
 
         req.session.user = newUser.UserID;
-        return res.status(201).send('User created');
+        return res.status(201).json({ message: 'User created' });
     }
     catch (err)
     {
         console.error('Error /signup: ', err);
-        return res.status(500).send('Internal server error');
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -101,13 +101,13 @@ app.post('/login', async (req,res) => {
 
     // ensure both username and password are included
     if (!username || !password)
-        return res.status(400).send('Missing username or password');
+        return res.status(400).json({ error: 'Missing username or password' });
 
     try
     {
         // try to find user
         const user = db.prepare('SELECT UserID, UserName, UserPassword FROM User WHERE UserName == ?').get(username);
-        if (!user) return res.status(401).send('User does not exist');
+        if (!user) return res.status(401).json({ error: 'User does not exist' });
 
         // try to match password
         const match = await bcrypt.compare(password, user.UserPassword);
@@ -116,15 +116,15 @@ app.post('/login', async (req,res) => {
         if (match)
         {
             req.session.user = user.UserID;
-            return res.send('Login successful');
+            return res.json({ message: 'Login successful' });
         }
         else
-            return res.status(401).send('Incorrect password');
+            return res.status(401).json({ error: 'Incorrect password'});
     }
     catch (err)
     {
         console.error('Error /login: ', err);
-        return res.status(500).send('Internal server error');
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -140,10 +140,10 @@ app.get('/minigame', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'minigame.html'));
 });
 
-// route: avatar.html
+// route: users.html
 // authenticate => user must be logged in
-app.get('/avatar', authenticate, (req,res) => {
-    res.sendFile(path.join(__dirname, '../public/', 'avatar.html'));
+app.get('/users', authenticate, (req,res) => {
+    res.sendFile(path.join(__dirname, '../public/', 'users.html'));
 });
 
 // route: logout
@@ -161,10 +161,9 @@ app.get('/logout', (req,res) => {
     });
 });
 
-// API endpoint: fetch user session data
-// webpages (/shop) call this function on page load
-// user must be logged in (obviously)
-// ASYNC/AWAIT FORMAT
+// API endpoint: fetch user data
+// webpages (/shop, /users) call this function on page load
+// authenticate => requires logged in
 app.get('/api/getUser', authenticate, (req,res) => {
     try
     {
@@ -193,6 +192,29 @@ app.get('/api/getUser', authenticate, (req,res) => {
     {
         console.error('Error /api/getUser: ', err);
         res.status(500).send('Internal server error');
+    }
+});
+
+// fetch all users (/users)
+// called on page load
+// authenticate => requires logged in
+app.get('/api/getUsers', authenticate, (req,res) => {
+    try
+    {
+        // fetch from User and Items (count owned)
+        const users = db.prepare(`
+            SELECT U.UserID, UserName, UserGold, UserHat, UserShirt, UserPants, COUNT(ItemID) UserItems
+            FROM User U LEFT JOIN UserItem UI
+            ON U.UserID = UI.UserID
+            GROUP BY U.UserID`).all();
+        res.json({ users: users });
+
+        // count how many items each user has?
+    }
+    catch (err)
+    {
+        console.error('Error /api/getUsers: ', err);
+        res.status(500).json({ error: 'Failed to get users' });
     }
 });
 
@@ -257,19 +279,17 @@ app.post('/api/equipItem', authenticate, (req,res) => {
         const { ItemID } = req.body;
         if (isNaN(ItemID)) return res.status(400).json({ error: 'Missing item ID' });
 
-        let ItemType;
 
-        // hat
-        if (ItemID == 0 || (ItemID > 0 && ItemID < 9))
+        // between UserHat, UserShirt, UserPants, which are we replacing
+        if (ItemID > -1 && ItemID < 9)
             db.prepare('UPDATE User SET UserHat = ? WHERE UserID = ?').run(ItemID, req.session.user);
-        // shirt
         else if (ItemID == -1 || (ItemID > 8 && ItemID < 16))
             db.prepare('UPDATE User SET UserShirt = ? WHERE UserID = ?').run(ItemID, req.session.user);
-        // pants
-        else
+        else if (ItemID == -2 || (ItemID > 16 && ItemID < 22))
             db.prepare('UPDATE User SET UserPants = ? WHERE UserID = ?').run(ItemID, req.session.user);
+        else
+            return res.status(400).json({ error: 'Invalid item ID'});
 
-        db.prepare('UPDATE User SET UserHat = ? WHERE UserID = ?').run(ItemID, req.session.user);
 
         return res.status(200).json({ message: 'Item equipped' });
     }
@@ -300,7 +320,7 @@ app.use((req,res) => {
     if (!req.session.user)
         return res.redirect('/login');
     
-    return res.redirect('/avatar');
+    return res.redirect('/users');
 })
 
 

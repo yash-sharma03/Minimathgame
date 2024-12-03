@@ -8,6 +8,7 @@
     <!-- link to css -->
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/login.css">
+    <script defer src="/js/login.js"></script>
 </head>
 
 <body>
@@ -18,7 +19,7 @@
     <p>Welcome to Gold Mine! In this game you can create an avatar, play a minigame to earn gold, and buy items from the shop to customize your avatar!</p>
 
     <!-- form reloads the page with POST request -->
-    <form action="/login" method="POST">
+    <form id="loginForm">
         <figure>
             <label for="username">Username</label>
             <input id="username" name="username" required>
@@ -31,6 +32,8 @@
 
         <button type="submit" id="loginBtn">Login</button>
     </form>
-    <a href="/signup">New user? Sign up here</a>
+    <a id="redirect" href="/signup">New user? Sign up here</a>
+
+    <figure id="statusFigure"></figure>
 </body>
 </html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Gold Mine: Users</title>
+    <meta charset="utf-8">
+
+    <!-- link to css -->
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/users.css">
+    <!-- js: execute after parsing HTML document -->
+    <script defer src="/js/users.js"></script>
+</head>
+
+<body>
+    <nav>
+        <a href="/shop">Shop</a>
+        <a href="/minigame">Minigame</a>
+        <a href="/users">Users</a>
+    </nav>
+    <header>
+        <h1>Gold Mine</h1>
+    </header>
+    
+    <main>
+        <!-- logged-in user information -->
+        <figure id="userFigure">
+            <p id="userP">User: <mark id="userMark"></mark></p>
+            <p id="goldP">Gold: <mark id="goldMark"></mark></p>
+            <a href="/logout">Log out</a>
+        </figure>
+ 
+        <!-- LEFT: img view -->
+        <section>
+            <img id="avatarImg" src="/images/avatar.png">
+            <img id="hatsImg" src="/images/blank.png">
+            <img id="shirtsImg" src="/images/blank.png">
+            <img id="pantsImg" src="/images/blank.png">
+
+            <!-- user information -->
+            <figure id="infoFigure">
+                <p id="infoP"></p>
+            </figure>
+        </section>
+
+        <!-- RIGHT: list of all users (figures inside) -->
+        <aside id="usersAside"></aside>
+    </main>
+</body>
+
+<script>
+</script>
+</html>

@@ -8,6 +8,7 @@
     <!-- link to css -->
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/login.css">
+    <script defer src="/js/signup.js"></script>
 </head>
 
 <body>
@@ -17,10 +18,8 @@
 
     <p>Welcome to Gold Mine! In this game you can create an avatar, play a minigame to earn gold, and buy items from the shop to customize your avatar!</p>
 
-    <!-- <p id="errorP"></p> -->
-
-    <!-- form reloads the page with POST request -->
-    <form action="/signup" method="POST">
+    <!-- form invokes function that sends POST request -->
+    <form id="signupForm">
         <figure>
             <label for="username">Username</label>
             <input id="username" name="username" required>
@@ -33,19 +32,8 @@
 
         <button type="submit" id="signupBtn">Signup</button>
     </form>
-    <a href="/login">Already have an account? Login here</a>
+    <a id="redirect" href="/login">Already have an account? Login here</a>
+
+    <figure id="statusFigure"></figure>
 </body>
-    <script>
-        // extract query parameters
-        const params = new URLSearchParams(window.location.search);
-
-        // check for error/success message
-        const error = params.get('error');
-
-        // grab element
-        const errorP = document.getElementById('errorP');
-
-        if (error)
-            errorP.textContent = error;
-    </script>
 </html>

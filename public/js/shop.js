@@ -153,14 +153,14 @@ function highlightItems ()
         switch (itemSelected.metadata.type)
         {
             case 'Hat':
+                hatsImg.setAttribute("src", itemSelected.metadata.file);
                 shirtsImg.setAttribute("src", shirtEquipped.metadata.file);
                 pantsImg.setAttribute("src", pantsEquipped.metadata.file);
-                hatsImg.setAttribute("src", itemSelected.metadata.file);
                 break;
             case 'Shirt':
                 hatsImg.setAttribute("src", hatEquipped.metadata.file);
-                pantsImg.setAttribute("src", pantsEquipped.metadata.file);
                 shirtsImg.setAttribute("src", itemSelected.metadata.file);
+                pantsImg.setAttribute("src", pantsEquipped.metadata.file);
                 break;
             case 'Pants':
                 hatsImg.setAttribute("src", hatEquipped.metadata.file);
