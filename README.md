@@ -1,7 +1,7 @@
 # o107_finalproject
 **Riley Guioguio, Yash Sharma**
 
-Shopping website
+Gold Mine
 
 ## setup
 ASSUMING YOU ARE ON WINDOWS (similar steps for Mac/Linux users)
