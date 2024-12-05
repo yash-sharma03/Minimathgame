@@ -67,7 +67,11 @@ async function fetchUser ()
     }
 }
 
-/** get all users */
+/**
+ * @function fetchUsers
+ * query database and get object of all users
+ * make 'figure' elements for each user, with corresponding user information
+ */
 async function fetchUsers ()
 {
     try
@@ -83,6 +87,7 @@ async function fetchUsers ()
             uFigure.metadata = {
                 user: user
             }
+            // populate figure with user information
             uFigure.innerHTML = `<p><mark>${user.UserName}</mark></p>`;
             uFigure.innerHTML += `<p>Items: <mark>${user.UserItems}</mark></p>`;
             uFigure.innerHTML += `<p>Gold: <mark>${user.UserGold}</mark></p>`;
@@ -98,9 +103,12 @@ async function fetchUsers ()
     }
 }
 
-// called when user ARTICLE clicked
-// change userSelected
-// article accessible by: event.currentTarget
+/**
+ * @function handleUserClick
+ * called when a user ARTICLE is clicked
+ * update `userSelected`
+ * article accessible by: event.currentTarget
+ */
 function handleUserClick (event)
 {
     // de-select any currently selected element
@@ -111,10 +119,12 @@ function handleUserClick (event)
     userSelected = event.currentTarget;
     userSelected.classList.add('selected');
 
+    // iterate through the map to replace images on left side with the user's equipped items
     hatsImg.setAttribute("src", itemMap.get(event.currentTarget.metadata.user.UserHat));
     shirtsImg.setAttribute("src", itemMap.get(event.currentTarget.metadata.user.UserShirt));
     pantsImg.setAttribute("src", itemMap.get(event.currentTarget.metadata.user.UserPants));
 
+    // display selected user's name
     infoFigure.style.visibility = 'visible';
     infoP.textContent = event.currentTarget.metadata.user.UserName;
 
@@ -122,7 +132,7 @@ function handleUserClick (event)
 }
 
 // asynchronous fetch on page load
-// user info first, then items
+// items first, then all users and user info
 document.addEventListener("DOMContentLoaded", async () => {
     await fetchItems();
     await fetchUser();

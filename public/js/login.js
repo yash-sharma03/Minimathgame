@@ -1,7 +1,9 @@
+// html document elements
 const loginForm = document.getElementById('loginForm');
 const statusFigure = document.getElementById('statusFigure');
 const redirect = document.getElementById('redirect');
 
+// add event listener to login form when submitted
 loginForm.addEventListener('submit', login);
 
 async function login (event)
@@ -9,11 +11,13 @@ async function login (event)
     // prevent page reload
     event.preventDefault();
 
+    // extract credentials from form
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
     try
     {
+        // call /login route with credentials
         const response = await fetch('/login', {
             method: 'POST',
             headers: {
@@ -22,6 +26,7 @@ async function login (event)
             body: JSON.stringify({ username, password })
         });
 
+        // display result to user
         const result = await response.json();
         if (response.ok)
         {

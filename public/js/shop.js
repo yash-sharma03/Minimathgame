@@ -76,6 +76,7 @@ async function fetchItems ()
             nArticle.innerHTML = "<h2>" + item.ItemName + "</h2><p>" + item.ItemPrice + "</p>";
             nArticle.addEventListener("click", handleItemClick);
 
+            // which carousel to add the article to?
             switch (item.ItemType)
             {
                 case 'Hat':

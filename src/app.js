@@ -5,9 +5,9 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-// import sqlite3: database setup (db.js)
+// import database (db.js)
 const db = require('./db')
-// import bcrypt: hashing password, user authentication
+// import bcrypt: password hashing, user authentication
 const bcrypt = require('bcrypt');
 
 // create express application
@@ -22,7 +22,8 @@ app.use('/css', express.static(path.join(__dirname, '../public/css')));
 app.use('/js', express.static(path.join(__dirname, '../public/js')));
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
-// express-sessions: allow sessions to be created
+// express-sessions: create sessions to identify users
+// allows web server to be persistent on reload and keep users logged in
 /** @NOTE if deploying for production, replace the secret key */
 app.use(session({
     secret: 'secretKey',
@@ -32,7 +33,12 @@ app.use(session({
 }));
 
 
-/** protect certain routes by ensuring that user is authenticated */
+/**
+ * @function authenticate
+ * protect certain routes (/shop, /minigame, /users) by requiring user to be logged in
+ * user is logged in if they have session
+ * otherwise, redirects to login page
+ */
 function authenticate(req, res, next)
 {
     if (req.session.user)
@@ -41,8 +47,12 @@ function authenticate(req, res, next)
     res.redirect('/login'); // redirect to login page
 }
 
-// route: signup.html
-// if already logged in, redirect
+/**
+ * @route /signup
+ * 
+ * logged in: redirect to /users
+ * not logged in: serve signup.html
+ */
 app.get('/signup', (req,res) => {
     if (req.session.user)
         res.redirect('/');
@@ -50,7 +60,13 @@ app.get('/signup', (req,res) => {
     res.sendFile(path.join(__dirname, '../public', 'signup.html'));
 });
 
-// route: signup.html AFTER FORM SUBMIT
+/**
+ * @route /signup
+ * sent on signup FORM SUBMIT
+ * creates new user, inserting info to database. creates new session
+ *
+ * @returns JSON response, user can access website if successful
+ */
 app.post('/signup', (req,res) => {
     // retrieve form data
     const { username, password } = req.body;
@@ -76,7 +92,9 @@ app.post('/signup', (req,res) => {
         const newUser = db.prepare('SELECT UserID FROM User WHERE UserName == ?').get(username);
         if (!newUser) return res.status(401).json({ error: 'Failed to query new user' });
 
+        // set session data
         req.session.user = newUser.UserID;
+        // ok response
         return res.status(201).json({ message: 'User created' });
     }
     catch (err)
@@ -86,8 +104,12 @@ app.post('/signup', (req,res) => {
     }
 });
 
-// route: login.html
-// TODO redirect to home page if user already logged in
+/**
+ * @route /login
+ * 
+ * logged in: redirect to /users
+ * not logged in: serve login.html
+ */
 app.get('/login', (req,res) => {
     if (req.session.user)
         res.redirect('/');
@@ -95,7 +117,13 @@ app.get('/login', (req,res) => {
     res.sendFile(path.join(__dirname, '../public', 'login.html'));
 });
 
-// route: login.html AFTER FORM SUBMIT
+/**
+ * @route /login
+ * sent on login FORM SUBMIT
+ * logs in provided user by comparing to database. creates new session
+ *
+ * @returns JSON response, user can access website if successful
+ */
 app.post('/login', async (req,res) => {
     const { username, password } = req.body;
 
@@ -128,26 +156,38 @@ app.post('/login', async (req,res) => {
     }
 });
 
-// route: shop.html
-// invokes authenticate function => user must be logged in
+
+/**
+ * @route /shop
+ * invokes authenticate function => user must be logged in
+ * serves shop.html
+ */
 app.get('/shop', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'shop.html'));
 });
 
-// route: avatar.html
-// authenticate => user must be logged in
+/**
+ * @route /minigame
+ * authenticate => user must be logged in 
+ * serves minigame.html
+ */
 app.get('/minigame', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'minigame.html'));
 });
 
-// route: users.html
-// authenticate => user must be logged in
+/**
+ * @route /users
+ * authenticate => user must be logged in 
+ * serves users.html
+ */
 app.get('/users', authenticate, (req,res) => {
     res.sendFile(path.join(__dirname, '../public/', 'users.html'));
 });
 
-// route: logout
-// destroy session, redirect to login page
+/**
+ * @route /logout
+ * destroys session, redirects to login page
+ */
 app.get('/logout', (req,res) => {
     req.session.destroy((err) => {
         if (err)
@@ -161,13 +201,17 @@ app.get('/logout', (req,res) => {
     });
 });
 
-// API endpoint: fetch user data
-// webpages (/shop, /users) call this function on page load
-// authenticate => requires logged in
+/**
+ * @route /api/getUser
+ * 
+ * API endpoint: fetch user data
+ * called by /shop, /minigame, /users on page load
+ * authenticate => requires logged in
+ */
 app.get('/api/getUser', authenticate, (req,res) => {
     try
     {
-        // fetch data from User
+        // use session to fetch data from User
         const result = db.prepare(`
             SELECT UserName, UserGold, UserHat, UserShirt, UserPants
             FROM User
@@ -179,6 +223,7 @@ app.get('/api/getUser', authenticate, (req,res) => {
         // fetch all owned items from UserItem (NOTE: its ok if no items owned yet)
         const items = db.prepare('SELECT ItemID FROM UserItem WHERE UserID = ?').all(req.session.user);
 
+        // return json object
         res.json({
             UserName: result.UserName,
             UserGold: result.UserGold,
@@ -195,13 +240,17 @@ app.get('/api/getUser', authenticate, (req,res) => {
     }
 });
 
-// fetch all users (/users)
-// called on page load
-// authenticate => requires logged in
+/**
+ * @route /api/getUsers
+ * 
+ * API endpoint: fetch data of all users
+ * called by /users on page load
+ * authenticate => requires logged in
+ */
 app.get('/api/getUsers', authenticate, (req,res) => {
     try
     {
-        // fetch from User and Items (count owned)
+        // fetch from User and UserItem (count owned)
         const users = db.prepare(`
             SELECT U.UserID, UserName, UserGold, UserHat, UserShirt, UserPants, COUNT(ItemID) UserItems
             FROM User U LEFT JOIN UserItem UI
@@ -218,13 +267,18 @@ app.get('/api/getUsers', authenticate, (req,res) => {
     }
 });
 
-// fetch all shop items
-// called by /shop on page load
+/**
+ * @route /api/getItems
+ * 
+ * API endpoint: fetch all items
+ * called by /shop on page load
+ * authenticate => requires logged in
+ */
 app.get('/api/getItems', authenticate, (req,res) => {
     try
     {
         const items = db.prepare('SELECT * FROM Item').all();
-        res.json({ items: items });
+        res.json({ items: items }); // return as JSON object
     }
     catch (err)
     {
@@ -233,6 +287,14 @@ app.get('/api/getItems', authenticate, (req,res) => {
     }
 });
 
+/**
+ * @route /api/buyItem
+ * 
+ * API endpoint: buy item indicated by ItemID
+ * called by /shop when user selects item to buy
+ * POST request
+ * authenticate => requires logged in
+ */
 app.post('/api/buyItem', authenticate, (req,res) => {
     try
     {
@@ -241,9 +303,9 @@ app.post('/api/buyItem', authenticate, (req,res) => {
         if (isNaN(ItemID)) return res.status(400).json({ error: 'Missing item ID' });
 
         // 1. query Item: how much gold does item cost
-        // 2. query User: do you have enough gold
+        // 2. query User: does user have enough gold
         // 3. query User: subtract UserGold
-        // 4. query UserItem: insert new row with UserID and ItemID
+        // 4. query UserItem: insert new row (UserID, ItemID)
         // 5. return; user will call /api/getUser again
         // transaction for atomicity
         const transaction = db.transaction(() => {
@@ -272,6 +334,14 @@ app.post('/api/buyItem', authenticate, (req,res) => {
     }
 });
 
+/**
+ * @route /api/equipItem
+ * 
+ * API endpoint: equip item indicated by ItemID
+ * called by /shop when user selects item to equip
+ * POST request
+ * authenticate => requires logged in
+ */
 app.post('/api/equipItem', authenticate, (req,res) => {
     try
     {
@@ -280,7 +350,7 @@ app.post('/api/equipItem', authenticate, (req,res) => {
         if (isNaN(ItemID)) return res.status(400).json({ error: 'Missing item ID' });
 
 
-        // between UserHat, UserShirt, UserPants, which are we replacing
+        // queries for replacing UserHat, UserShirt, or UserPants
         if (ItemID > -1 && ItemID < 9)
             db.prepare('UPDATE User SET UserHat = ? WHERE UserID = ?').run(ItemID, req.session.user);
         else if (ItemID == -1 || (ItemID > 8 && ItemID < 16))
@@ -300,6 +370,14 @@ app.post('/api/equipItem', authenticate, (req,res) => {
     }
 });
 
+/**
+ * @route /api/winGold
+ * 
+ * API endpoint: add 10 gold to user
+ * called by /minigame after user submits correct answer
+ * POST request
+ * authenticate => requires logged in
+ */
 app.post('/api/winGold', authenticate, (req,res) => {
     try
     {
@@ -315,14 +393,13 @@ app.post('/api/winGold', authenticate, (req,res) => {
 
 // handle all other requests
 // not authenticated -> redirect to login
-// authenticated -> redirect to avatar
+// authenticated -> redirect to users
 app.use((req,res) => {
     if (!req.session.user)
         return res.redirect('/login');
     
     return res.redirect('/users');
 })
-
 
 // export 'app'
 module.exports = app;

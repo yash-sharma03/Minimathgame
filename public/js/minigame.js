@@ -35,6 +35,12 @@ async function fetchUser ()
     }
 }
 
+/**
+ * @function generateQuestion
+ * 
+ * generate simple arithmetic question (numbers 1-10, addition/subtraction/multiplication)
+ * display the question and store answer in `correctAnswer`
+ */
 // generate math question: addition, subtraction, or multiplication
 function generateQuestion ()
 {
@@ -47,14 +53,22 @@ function generateQuestion ()
     questionP.textContent = equation;
 }
 
-// check user's answer, query database if correct
+/**
+ * @function checkAnswer
+ * 
+ * check submitted answer
+ * correct: query database to add 10 gold to user's gold count, display updates
+ * wrong: generate new question, prompt user to try again
+ */
 async function checkAnswer ()
 {
+    // extract submitted answer
     const userAnswer = parseInt(answerInput.value);
 
     statusP.innerHTML = "<p>" + equation + " = " + correctAnswer + "</p>";
     statusP.innerHTML += "<p>Your answer = " + userAnswer + "</p>";
     if (userAnswer === correctAnswer) {
+        // call route to query database 
         const response = await fetch('/api/winGold', {
             method: 'POST',
             headers: {
@@ -76,19 +90,25 @@ async function checkAnswer ()
         statusP.style.color = "var(--theme-red)";
     }
 
-    answerInput.value = ""; // Clear the input
+    answerInput.value = ""; // clear input box 
     answerButton.disabled = true;
     answerButton.textContent = 'Enter your answer';
-    generateQuestion(); // Generate a new question
+    generateQuestion(); // generate new question
 }
 
-// setup on page load
+// set up display and event listeners on page load
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchUser();
     generateQuestion();
     answerInput.addEventListener('input', handleButton);
 });
 
+/**
+ * @function handleButton
+ * 
+ * called when the value of the input box changes
+ * enables/disables button to submit answer
+ */
 function handleButton (event)
 {
     console.log(answerInput.value);

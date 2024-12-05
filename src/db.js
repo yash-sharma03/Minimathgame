@@ -1,6 +1,7 @@
 // db.js
 // handle database connections, queries
 
+// import: better-sqlite3 module => Database class
 const Database = require('better-sqlite3');
 const path = require('path');
 
